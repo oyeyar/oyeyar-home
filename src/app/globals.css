@@ -1455,3 +1455,19 @@ a {
     justify-content: center;
   }
 }
+
+.subscribe-message {
+  margin-top: 14px;
+
+  font-size: 13px;
+
+  text-align: center;
+}
+
+.subscribe-message.success {
+  color: var(--gold-light);
+}
+
+.subscribe-message.error {
+  color: rgba(255, 255, 255, 0.6);
+}

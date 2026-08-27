@@ -6,6 +6,7 @@ import { ArrowRight, Mail, Send, Lock } from 'lucide-react';
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaXTwitter } from 'react-icons/fa6';
 import { SiThreads } from 'react-icons/si';
 import Link from 'next/link';
+import { useState } from 'react';
 
 const socialLinks = [
   {
@@ -41,6 +42,54 @@ const socialLinks = [
 ];
 
 export default function Home() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const [message, setMessage] = useState('');
+
+  async function handleSubscribe(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!email.trim()) {
+      setStatus('error');
+      setMessage('Please enter your email address.');
+      return;
+    }
+
+    try {
+      setStatus('loading');
+      setMessage('');
+
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify({
+          email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Something went wrong.');
+      }
+
+      setStatus('success');
+      setMessage(data.message);
+
+      setEmail('');
+    } catch (error) {
+      setStatus('error');
+
+      setMessage(
+        error instanceof Error ? error.message : 'Something went wrong. Please try again.',
+      );
+    }
+  }
   return (
     <main className="coming-soon-page">
       <div className="page-content">
@@ -196,7 +245,7 @@ export default function Home() {
               </p>
             </div>
 
-            <form className="email-form" onSubmit={(event) => event.preventDefault()}>
+            <form className="email-form" onSubmit={handleSubscribe}>
               <div className="email-input-wrapper">
                 <Mail size={18} />
 
@@ -206,14 +255,22 @@ export default function Home() {
                   placeholder="Enter your email address"
                   aria-label="Email address"
                   required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={status === 'loading'}
                 />
               </div>
 
-              <button type="submit" className="notify-button">
-                <span>Keep me updated</span>
-                <Send size={17} />
+              <button type="submit" className="notify-button" disabled={status === 'loading'}>
+                <span>{status === 'loading' ? 'Please wait..' : 'Keep me updated'}</span>
+                {status !== 'loading' && <Send size={17} />}
               </button>
             </form>
+            {message && (
+              <p className={`subscribe-message ${status === 'success' ? 'success' : 'error'}`}>
+                {message}
+              </p>
+            )}
 
             <p className="privacy-note">
               <Lock size={15} />
